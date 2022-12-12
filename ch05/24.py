@@ -15,7 +15,6 @@ def mc_on_policy(env, runs):
     # player 牌是 12到21    庄家亮牌 是 1 - 10
     state_ace = np.zeros((10, 10))
     state_without_ace = np.zeros((10, 10))
-
     # 初始化returns,100个state
     returns = [[] * 10] * 10
     while runs > 0:
