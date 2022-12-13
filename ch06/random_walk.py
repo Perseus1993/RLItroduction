@@ -4,8 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def td0(init_values, alpha, truth, err):
-    value_table = init_values
+def td0(value_table, alpha):
     cur_state = 3
     while True:
         old_state = cur_state
@@ -20,15 +19,6 @@ def td0(init_values, alpha, truth, err):
         # finish ?
         if cur_state in [0, 6]:
             break
-            # 计算 rms
-    res = 0
-    for index in range(1, len(value_table) - 1):
-        res += ((truth[index] - value_table[index]) ** 2)
-    err.append(math.sqrt(res / 5))
-    print("---------------------")
-    print(truth[1:6])
-    print(value_table[1:6])
-    print("err = ", err[-1])
 
 
 def td_evaluate():
@@ -43,14 +33,13 @@ def td_evaluate():
     for episode in range(101):
         if episode in output:
             plt.plot(values[1:6], label=episode)
-        td0(values, 0.1, None, None)
+        td0(values, 0.1)
     plt.plot(value_truth[1:6], label='true values')
     plt.legend()
     plt.show()
 
 
-def mc(init_values, alpha, truth, err):
-    value_table = init_values
+def mc(value_table, alpha):
     cur_state = 3
     trajectory = [cur_state]
     while True:
@@ -68,14 +57,6 @@ def mc(init_values, alpha, truth, err):
     # 更新value
     for st in trajectory:
         value_table[st] += alpha * (reward - value_table[st])
-    # 计算 rms
-    res = 0
-    for index in range(len(value_table)):
-        res += ((truth[index] - value_table[index]) ** 2)
-    err.append(math.sqrt(res / 5))
-    print("*************")
-    print(truth)
-    print(value_table)
 
 
 def mc_vs_td():
@@ -88,23 +69,29 @@ def mc_vs_td():
     values[1:6] = 0.5
     values[6] = 1
 
-    # for a in mca:
-    #     # rms_err列表
-    #     err = []
-    #     cur_value_init = values.copy()
-    #     for i in range(101):
-    #         mc(cur_value_init, a, value_truth, err)
-    #     plt.plot(err, label="mc - " + str(a))
-    for a in [0.1]:
-        err2 = []
-        cur_value_init = values.copy()
-        for i in range(101):
-            td0(cur_value_init, a, value_truth, err2)
-        plt.plot(err2, label="td - " + str(a))
+    for index, a in enumerate(tda + mca):
+        if index < len(tda):
+            metod = 'td'
+        else:
+            metod = 'mc'
+        total_errors = np.zeros(101)
+        # 100次取均值
+        for run in range(100):
+            err2 = []
+            cur_value = np.copy(values)
+            for i in range(101):
+                err2.append(np.sqrt(np.sum(np.power(value_truth - cur_value, 2)) / 5.0))
+                if metod == 'td':
+                    td0(cur_value, a)
+                else:
+                    mc(cur_value, a)
+            total_errors += np.asarray(err2)
+        total_errors /= 100
+        plt.plot(total_errors, label=metod + " - " + str(a))
 
     plt.legend()
     plt.show()
 
 
 if __name__ == '__main__':
-    mc_vs_td()
+    td_evaluate()
