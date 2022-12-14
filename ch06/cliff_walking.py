@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 # U D L R
 actions = [0, 1, 2, 3]
@@ -60,7 +61,7 @@ def sarsa(env: Env, q_table, alpha, epsilon):
         else:
             next_action = find_action_from_q_table(q_table, next_state)
         # sarsa update
-        q_table[state[0]][state[1]][action] += alpha * (q_table[next_state[0]][next_state[1]][next_action]
+        q_table[state[0]][state[1]][action] += alpha * (-1 + q_table[next_state[0]][next_state[1]][next_action]
                                                         - q_table[state[0]][state[1]][action])
         action = next_action
         state = next_state
@@ -83,7 +84,7 @@ def q_learning(env: Env, q_table, alpha, epsilon):
         rewards += reward
         next_action = find_action_from_q_table(q_table, next_state)
         # sarsa update
-        q_table[state[0]][state[1]][action] += alpha * (q_table[next_state[0]][next_state[1]][next_action]
+        q_table[state[0]][state[1]][action] += alpha * (-1 + q_table[next_state[0]][next_state[1]][next_action]
                                                         - q_table[state[0]][state[1]][action])
         state = next_state
     return rewards
@@ -103,9 +104,19 @@ def train(env):
             rewards_sarsa[ep] += sarsa(env, q_table_sa, 0.2, 0.1)
             rewards_q[ep] += q_learning(env, q_table_q, 0.2, 0.1)
         if r == runs - 1:
+            print(q_table_q)
             print_optimal_policy(q_table_sa, env)
             print_optimal_policy(q_table_q, env)
     rewards_sarsa /= runs
+    rewards_q /= runs
+
+    plt.plot(rewards_sarsa, label='sarsa')
+    plt.plot(rewards_q, label='q_learning')
+    plt.xlabel('episode')
+    plt.ylabel('sum reward')
+    plt.ylim([-100, 0])
+    plt.legend()
+    plt.show()
 
 
 def print_optimal_policy(q_value, env):
@@ -127,6 +138,7 @@ def print_optimal_policy(q_value, env):
                 optimal_policy[-1].append('R')
     for row in optimal_policy:
         print(row)
+
 
 
 if __name__ == '__main__':
